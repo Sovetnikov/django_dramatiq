@@ -1,9 +1,14 @@
 import logging
+import threading
+import time
 
 from django import db
 from dramatiq.middleware import Middleware
 
 LOGGER = logging.getLogger("django_dramatiq.AdminMiddleware")
+
+# Workers can have multiple threads, but each thread has only one task at a time
+_actor_measurement = threading.local()
 
 
 class AdminMiddleware(Middleware):
@@ -25,16 +30,26 @@ class AdminMiddleware(Middleware):
 
         LOGGER.debug("Updating Task from message %r.", message.message_id)
         Task.tasks.create_or_update_from_message(message, status=Task.STATUS_RUNNING, actor_name=message.actor_name, queue_name=message.queue_name)
+        _actor_measurement.current_message_id = message.message_id
+        _actor_measurement.start = time.monotonic()
 
     def after_process_message(self, broker, message, *, result=None, exception=None):
-        from .models import Task
+        try:
+            from .models import Task
 
-        status = Task.STATUS_DONE
-        if exception is not None:
-            status = Task.STATUS_FAILED
+            status = Task.STATUS_DONE
+            if exception is not None:
+                status = Task.STATUS_FAILED
 
-        LOGGER.debug("Updating Task from message %r.", message.message_id)
-        Task.tasks.create_or_update_from_message(message, status=status, actor_name=message.actor_name, queue_name=message.queue_name)
+            LOGGER.debug("Updating Task from message %r.", message.message_id)
+            # Temporary check
+            if _actor_measurement.current_message_id != message.message_id:
+                raise Exception('_actor_measurement.current_message_id != message.message_id')
+            runtime = time.monotonic() - _actor_measurement.start
+            Task.tasks.create_or_update_from_message(message, status=status, actor_name=message.actor_name, queue_name=message.queue_name, runtime=runtime)
+        finally:
+            _actor_measurement.current_message_id = None
+            _actor_measurement.start = None
 
 
 class DbConnectionsMiddleware(Middleware):

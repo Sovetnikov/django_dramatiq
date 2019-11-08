@@ -50,6 +50,7 @@ class Task(models.Model):
 
     actor_name = models.CharField(max_length=300, null=True)
     queue_name = models.CharField(max_length=100, null=True)
+    runtime = models.FloatField(verbose_name='execution time', null=True, help_text='in seconds')
 
     tasks = TaskManager()
 
