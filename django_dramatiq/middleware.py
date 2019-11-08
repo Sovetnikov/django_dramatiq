@@ -1,4 +1,5 @@
 import logging
+import socket
 import threading
 import time
 
@@ -29,7 +30,8 @@ class AdminMiddleware(Middleware):
         from .models import Task
 
         LOGGER.debug("Updating Task from message %r.", message.message_id)
-        Task.tasks.create_or_update_from_message(message, status=Task.STATUS_RUNNING, actor_name=message.actor_name, queue_name=message.queue_name)
+        hostname = socket.gethostname()
+        Task.tasks.create_or_update_from_message(message, status=Task.STATUS_RUNNING, actor_name=message.actor_name, queue_name=message.queue_name, worker_hostname=hostname)
         _actor_measurement.current_message_id = message.message_id
         _actor_measurement.start = time.monotonic()
 
