@@ -22,8 +22,9 @@ class TaskAdmin(admin.ModelAdmin):
         "updated_at",
         "queue_name",
         "actor_name",
+        "worker_hostname",
     )
-    list_filter = ("status", "created_at", "queue_name", "actor_name")
+    list_filter = ("status", "created_at", "queue_name", "actor_name", "worker_hostname")
     search_fields = ("actor_name",)
 
     def eta(self, instance):
