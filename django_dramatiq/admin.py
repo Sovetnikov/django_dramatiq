@@ -13,7 +13,7 @@ from .models import Task
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     exclude = ("message_data",)
-    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime")
+    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime", "worker_hostname")
     list_display = (
         "__str__",
         "status",
