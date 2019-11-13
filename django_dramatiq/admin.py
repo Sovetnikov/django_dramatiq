@@ -13,7 +13,7 @@ from .models import Task
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     exclude = ("message_data",)
-    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime", "worker_hostname")
+    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime", "worker_hostname", "result")
     list_display = (
         "__str__",
         "status",
@@ -22,6 +22,7 @@ class TaskAdmin(admin.ModelAdmin):
         "updated_at",
         "queue_name",
         "actor_name",
+        "runtime",
         "worker_hostname",
     )
     list_filter = ("status", "created_at", "queue_name", "actor_name", "worker_hostname")
@@ -45,6 +46,10 @@ class TaskAdmin(admin.ModelAdmin):
         if traceback:
             return mark_safe("<pre>%s</pre>" % traceback)
         return None
+
+    def result(self, instance):
+        result = instance.message.get_result()
+        return mark_safe("<pre>%s</pre>" % str(result)[0:2000] if result is not None else 'None')
 
     def has_add_permission(self, request):
         return False
