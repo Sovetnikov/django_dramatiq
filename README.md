@@ -1,6 +1,9 @@
 # django_dramatiq
 
-Fork of Django Dramatiq app with admin interface speedup.
+Fork of Django Dramatiq app with these features:
+* storing more message attributes as model fields for admin interface speedup
+* measuring task working time
+* task results are shown on task page
 
 ## License
 
