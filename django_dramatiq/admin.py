@@ -1,4 +1,6 @@
+import decimal
 import json
+import math
 from datetime import datetime
 
 from django.conf import settings
@@ -12,8 +14,8 @@ from .models import Task
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    exclude = ("message_data",)
-    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime", "worker_hostname")
+    exclude = ("message_data", "runtime")
+    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime_display", "worker_hostname", "result",)
     list_display = (
         "__str__",
         "status",
@@ -22,6 +24,7 @@ class TaskAdmin(admin.ModelAdmin):
         "updated_at",
         "queue_name",
         "actor_name",
+        "runtime_display",
         "worker_hostname",
     )
     list_filter = ("status", "created_at", "queue_name", "actor_name", "worker_hostname")
@@ -45,6 +48,26 @@ class TaskAdmin(admin.ModelAdmin):
         if traceback:
             return mark_safe("<pre>%s</pre>" % traceback)
         return None
+
+    def result(self, instance):
+        if instance.status == Task.STATUS_DONE:
+            try:
+                result = instance.message.get_result(timeout=50)  # timeout in ms
+                return mark_safe("<pre>%s</pre>" % str(result)[0:2000] if result is not None else 'None')
+            except Exception as e:
+                return str(e)
+        return ''
+
+    def runtime_display(self, instance):
+        if instance.runtime is None:
+            return None
+        precision = None
+        if instance.runtime < 1:
+            # Display last digit after decimal point
+            return '%s sec' % round(decimal.Decimal(instance.runtime), abs(int(math.log10(abs(instance.runtime)))) + 1)
+        elif instance.runtime < 10:
+            precision = 1
+        return '%s sec' % round(instance.runtime, precision)
 
     def has_add_permission(self, request):
         return False
