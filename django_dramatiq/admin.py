@@ -48,8 +48,13 @@ class TaskAdmin(admin.ModelAdmin):
         return None
 
     def result(self, instance):
-        result = instance.message.get_result()
-        return mark_safe("<pre>%s</pre>" % str(result)[0:2000] if result is not None else 'None')
+        if instance.status == Task.STATUS_DONE:
+            try:
+                result = instance.message.get_result(timeout=50)  # timeout in ms
+                return mark_safe("<pre>%s</pre>" % str(result)[0:2000] if result is not None else 'None')
+            except Exception as e:
+                return str(e)
+        return ''
 
     def has_add_permission(self, request):
         return False
