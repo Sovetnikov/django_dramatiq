@@ -12,8 +12,8 @@ from .models import Task
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    exclude = ("message_data",)
-    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime", "worker_hostname", "result")
+    exclude = ("message_data", "runtime")
+    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime_display", "worker_hostname", "result",)
     list_display = (
         "__str__",
         "status",
@@ -22,7 +22,7 @@ class TaskAdmin(admin.ModelAdmin):
         "updated_at",
         "queue_name",
         "actor_name",
-        "runtime",
+        "runtime_display",
         "worker_hostname",
     )
     list_filter = ("status", "created_at", "queue_name", "actor_name", "worker_hostname")
@@ -55,6 +55,9 @@ class TaskAdmin(admin.ModelAdmin):
             except Exception as e:
                 return str(e)
         return ''
+
+    def runtime_display(self, instance):
+        return ('%s sec' % round(instance.run_time)) if instance.run_time is not None else None
 
     def has_add_permission(self, request):
         return False
