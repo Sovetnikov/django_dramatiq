@@ -1,4 +1,6 @@
+import decimal
 import json
+import math
 from datetime import datetime
 
 from django.conf import settings
@@ -61,10 +63,11 @@ class TaskAdmin(admin.ModelAdmin):
             return None
         precision = None
         if instance.runtime < 1:
-            precision = 2
+            # Display last digit after decimal point
+            return '%s sec' % round(decimal.Decimal(instance.runtime), abs(int(math.log10(abs(instance.runtime)))) + 1)
         elif instance.runtime < 10:
             precision = 1
-        return ('%s sec' % round(instance.runtime, precision)) if instance.runtime is not None else None
+        return '%s sec' % round(instance.runtime, precision)
 
     def has_add_permission(self, request):
         return False
