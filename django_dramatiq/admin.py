@@ -59,9 +59,11 @@ class TaskAdmin(admin.ModelAdmin):
     def runtime_display(self, instance):
         if instance.runtime is None:
             return None
-        precision = 0
+        precision = None
         if instance.runtime < 1:
             precision = 2
+        elif instance.runtime < 10:
+            precision = 1
         return ('%s sec' % round(instance.runtime, precision)) if instance.runtime is not None else None
 
     def has_add_permission(self, request):
