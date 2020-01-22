@@ -35,13 +35,19 @@ class AdminMiddleware(Middleware):
         _actor_measurement.current_message_id = message.message_id
         _actor_measurement.start = time.monotonic()
 
-    def after_process_message(self, broker, message, *, result=None, exception=None):
+    def after_skip_message(self, broker, message):
+        from .models import Task
+        self.after_process_message(broker, message, task_status=Task.STATUS_SKIPPED)
+
+    def after_process_message(self, broker, message, *, result=None, exception=None, task_status=None):
         try:
             from .models import Task
 
-            status = Task.STATUS_DONE
-            if exception is not None:
-                status = Task.STATUS_FAILED
+            status = task_status
+            if status is None:
+                status = Task.STATUS_DONE
+                if exception is not None:
+                    status = Task.STATUS_FAILED
 
             LOGGER.debug("Updating Task from message %r.", message.message_id)
             # Temporary check
