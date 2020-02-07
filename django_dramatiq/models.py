@@ -54,6 +54,8 @@ class Task(models.Model):
     queue_name = models.CharField(max_length=100, null=True)
     runtime = models.FloatField(verbose_name='execution time', null=True, help_text='in seconds')
     worker_hostname = models.CharField(max_length=300, null=True)
+    args = models.TextField(verbose_name='Arguments', null=True)
+    kwargs = models.TextField(verbose_name='Keyword arguments', null=True)
 
     tasks = TaskManager()
 
@@ -65,4 +67,6 @@ class Task(models.Model):
         return Message.decode(bytes(self.message_data))
 
     def __str__(self):
-        return str(self.message)
+        msg_str = str(self.message)
+        return (msg_str[:150] + '..') if len(msg_str) > 150 else msg_str
+

@@ -1,3 +1,4 @@
+import json
 import logging
 import socket
 import threading
@@ -31,7 +32,7 @@ class AdminMiddleware(Middleware):
 
         LOGGER.debug("Updating Task from message %r.", message.message_id)
         hostname = socket.gethostname()
-        Task.tasks.create_or_update_from_message(message, status=Task.STATUS_RUNNING, actor_name=message.actor_name, queue_name=message.queue_name, worker_hostname=hostname)
+        self._create_or_update_from_message(message, status=Task.STATUS_RUNNING, worker_hostname=hostname)
         _actor_measurement.current_message_id = message.message_id
         _actor_measurement.start = time.monotonic()
 
@@ -54,11 +55,20 @@ class AdminMiddleware(Middleware):
             if _actor_measurement.current_message_id != message.message_id:
                 raise Exception('_actor_measurement.current_message_id != message.message_id')
             runtime = time.monotonic() - _actor_measurement.start
-            Task.tasks.create_or_update_from_message(message, status=status, actor_name=message.actor_name, queue_name=message.queue_name, runtime=runtime)
+            self._create_or_update_from_message(message, status=status, runtime=runtime)
         finally:
             _actor_measurement.current_message_id = None
             _actor_measurement.start = None
 
+    @classmethod
+    def _create_or_update_from_message(self, message, status, **kwargs):
+        from .models import Task
+        Task.tasks.create_or_update_from_message(message, status=status,
+                                                 actor_name=message.actor_name,
+                                                 queue_name=message.queue_name,
+                                                 args=json.dumps(message.args, separators=(',', ':')) if message.args else None,
+                                                 kwargs=json.dumps(message.kwargs, separators=(',', ':')) if message.kwargs else None,
+                                                 **kwargs)
 
 class DbConnectionsMiddleware(Middleware):
     """This middleware cleans up db connections on worker shutdown.
