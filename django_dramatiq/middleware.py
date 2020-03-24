@@ -1,9 +1,12 @@
+import datetime
 import json
 import logging
 import socket
 import threading
 import time
+from decimal import Decimal
 
+from compat import DjangoJSONEncoder
 from django import db
 from dramatiq.middleware import Middleware
 
@@ -11,6 +14,14 @@ LOGGER = logging.getLogger("django_dramatiq.AdminMiddleware")
 
 # Workers can have multiple threads, but each thread has only one task at a time
 _actor_measurement = threading.local()
+
+class _DateDecimalJSONEncoder(DjangoJSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
+        if isinstance(o, datetime.datetime) or isinstance(o, datetime.date):
+            return o.isoformat()
+        return super().default(o)
 
 
 class AdminMiddleware(Middleware):
@@ -66,8 +77,8 @@ class AdminMiddleware(Middleware):
         Task.tasks.create_or_update_from_message(message, status=status,
                                                  actor_name=message.actor_name,
                                                  queue_name=message.queue_name,
-                                                 args=json.dumps(message.args, separators=(',', ':')) if message.args else None,
-                                                 kwargs=json.dumps(message.kwargs, separators=(',', ':')) if message.kwargs else None,
+                                                 args=json.dumps(message.args, cls=_DateDecimalJSONEncoder, separators=(',', ':')) if message.args else None,
+                                                 kwargs=json.dumps(message.kwargs, cls=_DateDecimalJSONEncoder, separators=(',', ':')) if message.kwargs else None,
                                                  **kwargs)
 
 class DbConnectionsMiddleware(Middleware):
