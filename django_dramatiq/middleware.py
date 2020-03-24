@@ -53,7 +53,7 @@ class AdminMiddleware(Middleware):
             LOGGER.debug("Updating Task from message %r.", message.message_id)
             # Temporary check
             if _actor_measurement.current_message_id != message.message_id:
-                raise Exception('_actor_measurement.current_message_id != message.message_id')
+                LOGGER.error("_actor_measurement.current_message_id (%r) != message.message_id (%r).", _actor_measurement.current_message_id, message.message_id)
             runtime = time.monotonic() - _actor_measurement.start
             self._create_or_update_from_message(message, status=status, runtime=runtime)
         finally:
