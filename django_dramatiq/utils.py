@@ -1,4 +1,8 @@
+import datetime
 import importlib
+from decimal import Decimal
+
+from django.core.serializers.json import DjangoJSONEncoder
 
 
 def load_class(path):
@@ -16,3 +20,11 @@ def load_middleware(path_or_obj):
     if isinstance(path_or_obj, str):
         return load_class(path_or_obj)()
     return path_or_obj
+
+class DateDecimalJSONEncoder(DjangoJSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
+        if isinstance(o, datetime.datetime) or isinstance(o, datetime.date):
+            return o.isoformat()
+        return super().default(o)

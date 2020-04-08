@@ -6,16 +6,18 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib import admin
 from django.utils import timezone
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
 from django_dramatiq.humanize import naturaldate
+from django_dramatiq.utils import DateDecimalJSONEncoder
 from .models import Task
 
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     exclude = ("message_data", "runtime")
-    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime_display", "worker_hostname", "result", "args", "kwargs")
+    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime_display", "worker_hostname", "result", "args", "kwargs", "args_display", "kwargs_display")
     list_display = (
         "__str__",
         "status",
@@ -40,13 +42,16 @@ class TaskAdmin(admin.ModelAdmin):
         return naturaldate(datetime.fromtimestamp(timestamp, tz=tz))
 
     def message_details(self, instance):
-        message_details = json.dumps(instance.message._asdict(), indent=4)
-        return mark_safe("<pre>%s</pre>" % message_details)
+        try:
+            message_details = json.dumps(instance.message._asdict(), cls=DateDecimalJSONEncoder, indent=4)
+            return mark_safe("<pre>%s</pre>" % escape(message_details))
+        except Exception as e:
+            return str(e)
 
     def traceback(self, instance):
         traceback = instance.message.options.get("traceback", None)
         if traceback:
-            return mark_safe("<pre>%s</pre>" % traceback)
+            return mark_safe("<pre>%s</pre>" % escape(traceback))
         return None
 
     def result(self, instance):
