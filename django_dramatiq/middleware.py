@@ -40,7 +40,7 @@ class AdminMiddleware(Middleware):
         self._create_or_update_from_message(message, status=Task.STATUS_RUNNING, worker_hostname=hostname)
         _actor_measurement.current_message_id = message.message_id
         _actor_measurement.start = time.monotonic()
-        _actor_measurement.start_mem = self._get_memory()
+        _actor_measurement.start_memory = self._get_memory()
 
     def after_skip_message(self, broker, message):
         from .models import Task
@@ -73,7 +73,7 @@ class AdminMiddleware(Middleware):
         finally:
             _actor_measurement.current_message_id = None
             _actor_measurement.start = None
-            _actor_measurement.start_mem = None
+            _actor_measurement.start_memory = None
 
     @classmethod
     def _create_or_update_from_message(self, message, status, **kwargs):
