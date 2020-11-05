@@ -64,7 +64,7 @@ class AdminMiddleware(Middleware):
             memory = None
             if _actor_measurement.current_message_id == message.message_id:
                 runtime = time.monotonic() - _actor_measurement.start
-                memory = self._get_memory() - _actor_measurement.start_memory
+                memory = round((self._get_memory() - _actor_measurement.start_memory)/1024, 0)
             else:
                 # We can get here if other middleware failed in before_process_message handler
                 if not exception:
