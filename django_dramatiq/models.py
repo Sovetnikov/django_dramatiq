@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.db import models
+from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.timezone import now
 from dramatiq import Message
@@ -21,6 +22,9 @@ class TaskManager(models.Manager):
             }
         )
         return task
+
+    def update_by_filter_from_message(self, message, filter, **extra_fields):
+        self.using(DATABASE_LABEL).filter(Q(id=message.message_id) & filter).update(**extra_fields)
 
     def delete_old_tasks(self, max_task_age):
         self.using(DATABASE_LABEL).filter(
@@ -56,6 +60,7 @@ class Task(models.Model):
     worker_hostname = models.CharField(max_length=300, null=True)
     args = models.TextField(verbose_name='Arguments', null=True)
     kwargs = models.TextField(verbose_name='Keyword arguments', null=True)
+    memory = models.PositiveIntegerField(verbose_name='process memory delta', null=True, help_text='in bytes')
 
     tasks = TaskManager()
 

@@ -32,6 +32,7 @@ setup(
     install_requires=[
         "django>=1.11",
         "dramatiq>=0.18.0",
+        "psutil>=4.4.0"
     ],
     classifiers=[
         'Environment :: Web Environment',
