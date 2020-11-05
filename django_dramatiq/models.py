@@ -60,7 +60,7 @@ class Task(models.Model):
     worker_hostname = models.CharField(max_length=300, null=True)
     args = models.TextField(verbose_name='Arguments', null=True)
     kwargs = models.TextField(verbose_name='Keyword arguments', null=True)
-    memory = models.PositiveIntegerField(verbose_name='process memory delta', null=True, help_text='in bytes')
+    memory = models.IntegerField(verbose_name='process memory delta', null=True, help_text='in bytes')
 
     tasks = TaskManager()
 
