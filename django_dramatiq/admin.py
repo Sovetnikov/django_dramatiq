@@ -17,7 +17,7 @@ from .models import Task
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     exclude = ("message_data", "runtime")
-    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime_display", "worker_hostname", "result", "args", "kwargs")
+    readonly_fields = ("message_details", "traceback", "status", "queue_name", "actor_name", "runtime_display", "worker_hostname", "result", "args", "kwargs", "memory")
     list_display = (
         "__str__",
         "status",
@@ -74,6 +74,11 @@ class TaskAdmin(admin.ModelAdmin):
             precision = 1
         return '%s sec' % round(instance.runtime, precision)
 
+    def memory_display(self, instance):
+        if instance.memory is None:
+            return None
+        return human_readable_size(instance.memory*1024)
+
     def has_add_permission(self, request):
         return False
 
@@ -82,3 +87,10 @@ class TaskAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, task=None):
         return False
+
+def human_readable_size(size, decimal_places=1):
+    for unit in ['b', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb']:
+        if size < 1024.0 or unit == 'Pb':
+            break
+        size /= 1024.0
+    return f"{size:.{decimal_places}f} {unit}"
